@@ -38,6 +38,6 @@ const COMPANIES = ['Revando','Alpaugh','MBI'];
 // e dall'aggiunta di queste stesse email come "test user" in
 // Google Cloud Console > OAuth consent screen (l'app non è pubblica/verificata).
 const ALLOWED_EMAILS = [
-  // 'tuamail@esempio.com',
-  // 'collega@esempio.com',
+  // 'christophermitoli@gmail.com',
+  // 'giuliano.v@marathonbet.it',
 ];
