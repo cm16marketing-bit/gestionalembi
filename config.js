@@ -7,8 +7,8 @@
 // (es. https://cm16marketing-bit.github.io) sia tra le "Authorized JavaScript origins".
 const CLIENT_ID = '525708495290-u14oducrh67egbjcueh8o1pd088oe60c.apps.googleusercontent.com';
 
-// Scope: Sheets (dati), Drive (trovare/creare il foglio), Calendar (reminder via invito)
-const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar.events';
+// Scope: Sheets (dati), Drive (trovare/creare il foglio), Calendar (reminder via invito), userinfo.email (per leggere l'email di chi fa login)
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets https://www.googleapis.com/auth/drive https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/userinfo.email';
 
 // ID del Google Sheet condiviso. Lascialo vuoto al primo avvio:
 // l'app te lo crea in automatico e te lo mostra a schermo.
@@ -32,12 +32,12 @@ const PIATTAFORME = ['Affilka','Exalogic','Entrambe'];
 const STATI = ['Da creare','Pending','Firmato'];
 const COMPANIES = ['Revando','Alpaugh','MBI'];
 
-// Email abilitate ad accedere al sito (aggiungi qui i colleghi).
+// Email abilitate ad accedere al sito.
 // NB: questo è solo un filtro lato interfaccia — la sicurezza vera
 // è data dalla condivisione del Google Sheet via permessi Drive
 // e dall'aggiunta di queste stesse email come "test user" in
 // Google Cloud Console > OAuth consent screen (l'app non è pubblica/verificata).
 const ALLOWED_EMAILS = [
-  // 'cm16marketing@gmail.com',
-  // 'giuliano.v@marathonbet.it',
+  'cm16marketing@gmail.com',
+  'giuliano.v@marathonbet.it',
 ];
