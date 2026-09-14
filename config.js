@@ -24,7 +24,7 @@ const TAB_PROMOZIONI = 'Promozioni';
 const CONTRATTI_HEADERS = [
   'ID','Nome Azienda','Nome Partner','Email Partner',
   'Piattaforma','Stato Contratto','Company','Data Firma','Note',
-  'Data Creazione','Ultima Modifica'
+  'Data Creazione','Ultima Modifica','Link'
 ];
 
 // Opzioni fisse per i menu a tendina
@@ -39,5 +39,5 @@ const COMPANIES = ['Revando','Alpaugh','MBI'];
 // Google Cloud Console > OAuth consent screen (l'app non è pubblica/verificata).
 const ALLOWED_EMAILS = [
   'cm16marketing@gmail.com',
-  'Enzogiul81@gmail.com',
+  'giuliano.v@marathonbet.it',
 ];
