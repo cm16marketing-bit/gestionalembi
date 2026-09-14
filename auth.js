@@ -11,11 +11,10 @@ function tokenValid() {
 }
 
 async function fetchEmail() {
-  const r = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
-    headers: { Authorization: 'Bearer ' + token }
-  });
-  if (!r.ok) throw new Error('Impossibile leggere l\'email dell\'account Google');
+  const r = await fetch('https://oauth2.googleapis.com/tokeninfo?access_token=' + encodeURIComponent(token));
+  if (!r.ok) throw new Error('Token non valido, riprova il login');
   const d = await r.json();
+  if (!d.email) throw new Error('Lo scope email non è stato concesso durante il login — riprova e controlla che nella schermata Google compaia "Vedere il tuo indirizzo email"');
   return d.email;
 }
 
