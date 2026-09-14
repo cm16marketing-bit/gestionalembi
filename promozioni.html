@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Promozioni — Gestionale Partner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="login-screen">
+  <div id="ls">
+    <img src="logo-lg.png" alt="Marathonbet" style="height:52px;margin-bottom:20px">
+    <h1 class="l-title">Gestionale Partner</h1>
+    <button class="btng" onclick="handleLogin()">Accedi con Google</button>
+  </div>
+</div>
+
+<div id="app-screen" style="display:none">
+  <div class="hdr">
+    <div class="hdr-top">
+      <button class="hdr-back" onclick="location.href='index.html'">←</button>
+      <div class="hdr-title">🎯 Promozioni</div>
+    </div>
+  </div>
+  <div class="wrap">
+    <div class="empty">
+      <div class="ei">🎯</div>
+      <div class="et">Promozioni — in arrivo</div>
+      <div>Questa sezione sarà attiva a breve.</div>
+    </div>
+  </div>
+</div>
+
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script>
+function handleLogin() {
+  doSignIn(() => bootAuth(() => {}), email => alert('Accesso non abilitato per ' + email + '.'));
+}
+bootAuth(() => {});
+</script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+</body>
+</html>

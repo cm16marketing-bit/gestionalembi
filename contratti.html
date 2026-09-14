@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Contratti — Gestionale Partner</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1565c0">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="login-screen">
+  <div id="ls">
+    <img src="logo-lg.png" alt="Marathonbet" style="height:52px;margin-bottom:20px">
+    <h1 class="l-title">Gestionale Partner</h1>
+    <button class="btng" onclick="handleLogin()">Accedi con Google</button>
+  </div>
+</div>
+
+<div id="app-screen" style="display:none">
+  <div class="hdr">
+    <div class="hdr-top">
+      <button class="hdr-back" onclick="location.href='index.html'">←</button>
+      <div class="hdr-title">📄 Contratti</div>
+      <button class="ic" onclick="refreshAll()" title="Aggiorna">🔄</button>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <input class="srch" id="search" type="search" placeholder="Cerca azienda o partner…" oninput="render()">
+    <div class="chips-row" id="chips">
+      <div class="chip active" data-f="tutti" onclick="setFilter(this)">Tutti</div>
+      <div class="chip" data-f="Da creare" onclick="setFilter(this)">Da creare</div>
+      <div class="chip" data-f="Pending" onclick="setFilter(this)">Pending</div>
+      <div class="chip" data-f="Firmato" onclick="setFilter(this)">Firmato</div>
+    </div>
+
+    <div class="list" id="list"></div>
+
+    <div class="csv-zone" id="csv-zone" style="display:none">
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">📥 Importa contratti da CSV</div>
+      <div style="font-size:13px;color:var(--ts);margin-bottom:12px">La prima riga del file deve contenere i nomi delle colonne</div>
+      <input type="file" id="csv-file" accept=".csv" onchange="handleCsvFile(this.files[0])">
+    </div>
+  </div>
+
+  <div class="fab-row">
+    <button class="fab-btn fab-secondary" onclick="toggleCsvZone()">📥 Importa CSV</button>
+    <button class="fab-btn fab-primary" onclick="openForm()">＋ Nuovo contratto</button>
+  </div>
+</div>
+
+<!-- FORM MODAL -->
+<div class="ov" id="form-ov" onclick="ovc(event,'form-ov')">
+<div class="modal">
+  <div class="mh"><div class="mt" id="ftitle">Nuovo contratto</div><button class="mx" onclick="closeM('form-ov')">✕</button></div>
+  <div class="mb">
+    <input type="hidden" id="f-id"><input type="hidden" id="f-row">
+    <div class="fg"><label class="fl">Nome azienda *</label><input class="fi" id="f-azienda" placeholder="Acme Srl"></div>
+    <div class="fg"><label class="fl">Nome partner</label><input class="fi" id="f-partner" placeholder="Mario Rossi"></div>
+    <div class="fg"><label class="fl">Email partner</label><input class="fi" id="f-email" type="email" placeholder="mario.rossi@partner.com"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Piattaforma</label><select class="fs" id="f-piattaforma"></select></div>
+      <div class="fg"><label class="fl">Stato contratto</label><select class="fs" id="f-stato"></select></div>
+    </div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Company</label><select class="fs" id="f-company"></select></div>
+      <div class="fg"><label class="fl">Data firma</label><input class="fi" id="f-datafirma" type="date"></div>
+    </div>
+    <div class="fg"><label class="fl">Note</label><textarea class="ft" id="f-note"></textarea></div>
+    <div class="fa">
+      <button class="btn bs" onclick="closeM('form-ov')">Annulla</button>
+      <button class="btn bp" onclick="saveContratto()">💾 Salva</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="ov" id="det-ov" onclick="ovc(event,'det-ov')">
+  <div class="modal"><div id="det-content"></div></div>
+</div>
+
+<!-- REMINDER MODAL -->
+<div class="ov" id="rem-ov" onclick="ovc(event,'rem-ov')">
+<div class="modal">
+  <div class="mh"><div class="mt">🔔 Reminder</div><button class="mx" onclick="closeM('rem-ov')">✕</button></div>
+  <div class="mb">
+    <div class="fg"><label class="fl">Destinatario</label>
+      <select class="fs" id="rem-dest"></select>
+    </div>
+    <div class="fg" id="rem-custom-wrap" style="display:none"><label class="fl">Email destinatario</label><input class="fi" id="rem-custom" type="email" placeholder="collega@esempio.com"></div>
+    <div class="fg"><label class="fl">Titolo</label><input class="fi" id="rem-titolo"></div>
+    <div class="frow">
+      <div class="fg"><label class="fl">Data</label><input class="fi" id="rem-data" type="date"></div>
+      <div class="frow" style="gap:8px">
+        <div class="fg"><label class="fl">Inizio</label><input class="fi" id="rem-start" type="time" value="10:00"></div>
+        <div class="fg"><label class="fl">Fine</label><input class="fi" id="rem-end" type="time" value="10:30"></div>
+      </div>
+    </div>
+    <div class="fg"><label class="fl">Descrizione</label><textarea class="ft" id="rem-desc"></textarea></div>
+    <div class="fa">
+      <button class="btn bs" onclick="closeM('rem-ov')">Annulla</button>
+      <button class="btn bgrn" onclick="sendReminder()">🔔 Invia reminder</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- CSV MAPPING MODAL -->
+<div class="ov" id="map-ov" onclick="ovc(event,'map-ov')">
+<div class="modal">
+  <div class="mh"><div class="mt">Abbina le colonne</div><button class="mx" onclick="closeM('map-ov')">✕</button></div>
+  <div class="mb">
+    <div id="map-summary" style="font-size:13px;margin-bottom:14px"></div>
+    <div id="map-rows"></div>
+    <div style="background:#fff3e0;color:var(--amb);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:12.5px">
+      Piattaforma / Stato / Company: valore riconosciuto automaticamente se simile a un'opzione esistente, altrimenti creato come nuovo valore.
+    </div>
+    <div class="fa">
+      <button class="btn bs" onclick="closeM('map-ov')">Annulla</button>
+      <button class="btn bp" id="map-confirm" onclick="confirmImport()">Importa</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<div class="ldo" id="loader"><div class="sp"></div></div>
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script src="auth.js"></script>
+<script src="sheets.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script>
+let spreadsheetId = SPREADSHEET_ID;
+let contratti = [];
+let filter = 'tutti';
+let editingRow = null;
+let pendingCsvRows = null;
+let remContext = null;
+
+function handleLogin() {
+  doSignIn(() => bootAuth(boot), email => alert('Accesso non abilitato per ' + email + '.'));
+}
+bootAuth(boot);
+
+async function boot() {
+  load();
+  try {
+    const s = await ensureSpreadsheet();
+    spreadsheetId = s.id;
+    if (s.justCreated) {
+      alert('Foglio creato!\n\nID da incollare in config.js (SPREADSHEET_ID):\n\n' + s.id + '\n\nDopo averlo incollato, condividi questo Google Sheet (Drive) con le email dei colleghi abilitati.');
+    }
+    fillSelect('f-piattaforma', PIATTAFORME);
+    fillSelect('f-stato', STATI);
+    fillSelect('f-company', COMPANIES);
+    fillRemDest();
+    await fetchContratti();
+    hideLoad(); render();
+  } catch (e) { hideLoad(); toast('❌ ' + e.message); console.error(e); }
+}
+
+async function refreshAll() { load(); await fetchContratti(); hideLoad(); render(); toast('✅ Aggiornato'); }
+async function fetchContratti() { contratti = await readContratti(spreadsheetId); }
+
+function fillSelect(id, opts, extra = []) {
+  const all = [...new Set([...opts, ...extra])];
+  document.getElementById(id).innerHTML = all.map(o => `<option value="${esc(o)}">${esc(o)}</option>`).join('');
+}
+function fillRemDest() {
+  const others = ALLOWED_EMAILS.filter(e => e.toLowerCase() !== (userEmail || '').toLowerCase());
+  document.getElementById('rem-dest').innerHTML =
+    others.map(e => `<option value="${esc(e)}">${esc(e)}</option>`).join('') +
+    `<option value="__custom__">Altra email…</option>`;
+  document.getElementById('rem-dest').onchange = e => {
+    document.getElementById('rem-custom-wrap').style.display = e.target.value === '__custom__' ? 'block' : 'none';
+  };
+}
+
+function setFilter(el) {
+  document.querySelectorAll('#chips .chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active'); filter = el.dataset.f; render();
+}
+
+function statoClass(s) {
+  if (s === 'Firmato') return 'pill-stato-fir';
+  if (s === 'Pending') return 'pill-stato-pen';
+  return 'pill-stato-daf';
+}
+
+function render() {
+  const q = (document.getElementById('search').value || '').toLowerCase();
+  let items = contratti.filter(c =>
+    (filter === 'tutti' || c['Stato Contratto'] === filter) &&
+    (!q || (c['Nome Azienda']+c['Nome Partner']).toLowerCase().includes(q))
+  );
+  const list = document.getElementById('list');
+  if (!items.length) { list.innerHTML = `<div class="empty"><div class="ei">📄</div><div class="et">Nessun contratto</div><div>Aggiungine uno o importa un CSV</div></div>`; return; }
+  list.innerHTML = items.map(c => `
+    <div class="card" onclick="openDetail('${c._rowIndex}')">
+      <div class="card-top">
+        <div>
+          <div class="cn">${esc(c['Nome Azienda'])}</div>
+          <div class="cs">${esc(c['Nome Partner'])}</div>
+          ${c['Email Partner'] ? `<div class="ce">${esc(c['Email Partner'])}</div>` : ''}
+        </div>
+        <button class="remind-btn" title="Reminder" onclick="event.stopPropagation();openReminder('${c._rowIndex}')">🔔</button>
+      </div>
+      <div class="pills">
+        ${c['Piattaforma'] ? `<span class="pill pill-plat">${esc(c['Piattaforma'])}</span>` : ''}
+        ${c['Stato Contratto'] ? `<span class="pill ${statoClass(c['Stato Contratto'])}">${esc(c['Stato Contratto'])}</span>` : ''}
+        ${c['Company'] ? `<span class="pill pill-comp">${esc(c['Company'])}</span>` : ''}
+      </div>
+    </div>`).join('');
+}
+
+function findByRow(rowIndex) { return contratti.find(c => String(c._rowIndex) === String(rowIndex)); }
+
+function openForm() {
+  editingRow = null;
+  document.getElementById('ftitle').textContent = 'Nuovo contratto';
+  ['f-azienda','f-partner','f-email','f-datafirma','f-note'].forEach(id => document.getElementById(id).value = '');
+  fillSelect('f-piattaforma', PIATTAFORME, distinctVals('Piattaforma'));
+  fillSelect('f-stato', STATI, distinctVals('Stato Contratto'));
+  fillSelect('f-company', COMPANIES, distinctVals('Company'));
+  openM('form-ov');
+}
+
+function openEdit(rowIndex) {
+  const c = findByRow(rowIndex); if (!c) return;
+  editingRow = c._rowIndex;
+  document.getElementById('ftitle').textContent = 'Modifica contratto';
+  document.getElementById('f-azienda').value = c['Nome Azienda'];
+  document.getElementById('f-partner').value = c['Nome Partner'];
+  document.getElementById('f-email').value = c['Email Partner'];
+  document.getElementById('f-datafirma').value = toIsoDate(c['Data Firma']);
+  document.getElementById('f-note').value = c['Note'];
+  fillSelect('f-piattaforma', PIATTAFORME, distinctVals('Piattaforma')); document.getElementById('f-piattaforma').value = c['Piattaforma'];
+  fillSelect('f-stato', STATI, distinctVals('Stato Contratto')); document.getElementById('f-stato').value = c['Stato Contratto'];
+  fillSelect('f-company', COMPANIES, distinctVals('Company')); document.getElementById('f-company').value = c['Company'];
+  closeM('det-ov'); openM('form-ov');
+}
+
+function distinctVals(field) { return [...new Set(contratti.map(c => c[field]).filter(Boolean))]; }
+
+function toIsoDate(s) { // "gg/mm/aaaa" -> "aaaa-mm-gg"
+  if (!s || !s.includes('/')) return '';
+  const [d,m,y] = s.split('/'); return `${y}-${m}-${d}`;
+}
+function fromIsoDate(s) { if (!s) return ''; const [y,m,d] = s.split('-'); return `${d}/${m}/${y}`; }
+
+async function saveContratto() {
+  const azienda = document.getElementById('f-azienda').value.trim();
+  if (!azienda) { toast('❌ Inserisci il nome azienda'); return; }
+  const now = fmtDate(new Date());
+  const rowObj = {
+    'Nome Azienda': azienda,
+    'Nome Partner': document.getElementById('f-partner').value.trim(),
+    'Email Partner': document.getElementById('f-email').value.trim(),
+    'Piattaforma': document.getElementById('f-piattaforma').value,
+    'Stato Contratto': document.getElementById('f-stato').value,
+    'Company': document.getElementById('f-company').value,
+    'Data Firma': fromIsoDate(document.getElementById('f-datafirma').value),
+    'Note': document.getElementById('f-note').value.trim()
+  };
+  closeM('form-ov'); load();
+  try {
+    if (editingRow) {
+      const orig = findByRow(editingRow);
+      const values = CONTRATTI_HEADERS.map(h => h === 'ID' ? orig['ID'] : h === 'Data Creazione' ? orig['Data Creazione'] : h === 'Ultima Modifica' ? now : rowObj[h] ?? '');
+      await updateContrattoRow(spreadsheetId, editingRow, values);
+      toast('✅ Contratto aggiornato');
+    } else {
+      const id = Date.now().toString();
+      const values = CONTRATTI_HEADERS.map(h => h === 'ID' ? id : h === 'Data Creazione' ? now : h === 'Ultima Modifica' ? now : rowObj[h] ?? '');
+      await appendContratti(spreadsheetId, [values]);
+      toast('✅ Contratto salvato');
+    }
+    await fetchContratti(); hideLoad(); render();
+  } catch (e) { hideLoad(); toast('❌ ' + e.message); }
+}
+
+function openDetail(rowIndex) {
+  const c = findByRow(rowIndex); if (!c) return;
+  document.getElementById('det-content').innerHTML = `
+    <div class="mh"><div class="mt">Dettagli contratto</div><button class="mx" onclick="closeM('det-ov')">✕</button></div>
+    <div class="dfs">
+      <div class="df"><div class="dfl">Nome azienda</div><div class="dfv">${esc(c['Nome Azienda'])}</div></div>
+      <div class="df"><div class="dfl">Nome partner</div><div class="dfv">${esc(c['Nome Partner'])||'—'}</div></div>
+      <div class="df"><div class="dfl">Email partner</div><div class="dfv">${c['Email Partner']?`<a href="mailto:${esc(c['Email Partner'])}">${esc(c['Email Partner'])}</a>`:'—'}</div></div>
+      <div class="df"><div class="dfl">Piattaforma</div><div class="dfv">${esc(c['Piattaforma'])||'—'}</div></div>
+      <div class="df"><div class="dfl">Stato contratto</div><div class="dfv">${esc(c['Stato Contratto'])||'—'}</div></div>
+      <div class="df"><div class="dfl">Company</div><div class="dfv">${esc(c['Company'])||'—'}</div></div>
+      <div class="df"><div class="dfl">Data firma</div><div class="dfv">${esc(c['Data Firma'])||'—'}</div></div>
+      <div class="df"><div class="dfl">Note</div><div class="dfv">${esc(c['Note'])?esc(c['Note']).replace(/\n/g,'<br>'):'—'}</div></div>
+      <div class="df"><div class="dfl">Creato il</div><div class="dfv">${esc(c['Data Creazione'])}</div></div>
+      <div class="df"><div class="dfl">Ultima modifica</div><div class="dfv">${esc(c['Ultima Modifica'])}</div></div>
+    </div>
+    <div class="da">
+      <button class="btn br" onclick="doDelete('${c._rowIndex}')">🗑️ Elimina</button>
+      <button class="btn bp" onclick="openEdit('${c._rowIndex}')">✏️ Modifica</button>
+    </div>`;
+  openM('det-ov');
+}
+
+async function doDelete(rowIndex) {
+  const c = findByRow(rowIndex);
+  if (!confirm(`Eliminare il contratto con "${c['Nome Azienda']}"?`)) return;
+  closeM('det-ov'); load();
+  try { await deleteContrattoRow(spreadsheetId, parseInt(rowIndex)); await fetchContratti(); hideLoad(); render(); toast('✅ Eliminato'); }
+  catch (e) { hideLoad(); toast('❌ ' + e.message); }
+}
+
+function openReminder(rowIndex) {
+  const c = findByRow(rowIndex);
+  remContext = c;
+  document.getElementById('rem-titolo').value = `Follow-up contratto — ${c['Nome Azienda']}`;
+  document.getElementById('rem-desc').value = `Contratto: ${c['Nome Azienda']} (${c['Nome Partner']||'n/d'})\nStato: ${c['Stato Contratto']}\nCompany: ${c['Company']}`;
+  document.getElementById('rem-data').value = new Date().toISOString().slice(0,10);
+  fillRemDest();
+  openM('rem-ov');
+}
+
+async function sendReminder() {
+  const destSel = document.getElementById('rem-dest').value;
+  const guestEmail = destSel === '__custom__' ? document.getElementById('rem-custom').value.trim() : destSel;
+  if (!guestEmail) { toast('❌ Indica un destinatario'); return; }
+  const payload = {
+    title: document.getElementById('rem-titolo').value.trim() || 'Reminder',
+    description: document.getElementById('rem-desc').value.trim(),
+    date: document.getElementById('rem-data').value,
+    start: document.getElementById('rem-start').value,
+    end: document.getElementById('rem-end').value,
+    guestEmail
+  };
+  if (!payload.date) { toast('❌ Indica una data'); return; }
+  closeM('rem-ov'); load();
+  try { await createReminderEvent(payload); hideLoad(); toast('✅ Reminder inviato a ' + guestEmail); }
+  catch (e) { hideLoad(); toast('❌ ' + e.message); }
+}
+
+// ═══════════════════════════════════════════════════
+// IMPORT CSV
+// ═══════════════════════════════════════════════════
+function toggleCsvZone() {
+  const z = document.getElementById('csv-zone');
+  z.style.display = z.style.display === 'none' ? 'block' : 'none';
+}
+
+const TARGET_FIELDS = ['— ignora —','Nome Azienda','Nome Partner','Email Partner','Piattaforma','Stato Contratto','Company','Data Firma','Note'];
+
+function guessTarget(colName) {
+  const c = colName.toLowerCase();
+  if (c.includes('azien') || c.includes('company name') || c.includes('ragione')) return 'Nome Azienda';
+  if (c.includes('partner') || c.includes('referente') || c.includes('contatto')) return 'Nome Partner';
+  if (c.includes('mail')) return 'Email Partner';
+  if (c.includes('piattaform') || c.includes('platform')) return 'Piattaforma';
+  if (c.includes('stato') || c.includes('status')) return 'Stato Contratto';
+  if (c.includes('company') || c.includes('gruppo') || c.includes('entit')) return 'Company';
+  if (c.includes('data') || c.includes('firma') || c.includes('date')) return 'Data Firma';
+  if (c.includes('not')) return 'Note';
+  return '— ignora —';
+}
+
+function handleCsvFile(file) {
+  if (!file) return;
+  Papa.parse(file, {
+    header: true, skipEmptyLines: true,
+    complete: res => {
+      if (!res.data.length) { toast('❌ File CSV vuoto'); return; }
+      const cols = res.meta.fields || [];
+      document.getElementById('map-summary').innerHTML = `<span style="font-weight:700">${res.data.length} righe trovate</span> nel file <span style="color:var(--ts)">${esc(file.name)}</span>`;
+      document.getElementById('map-rows').innerHTML = cols.map((c, i) => `
+        <div class="map-row">
+          <div class="map-src">${esc(c)}</div>
+          <span>→</span>
+          <select class="fs" data-col="${i}">
+            ${TARGET_FIELDS.map(t => `<option ${t === guessTarget(c) ? 'selected' : ''}>${t}</option>`).join('')}
+          </select>
+        </div>`).join('');
+      pendingCsvRows = { cols, data: res.data };
+      openM('map-ov');
+    },
+    error: err => toast('❌ Errore lettura CSV: ' + err.message)
+  });
+}
+
+async function confirmImport() {
+  if (!pendingCsvRows) return;
+  const mapSelects = document.querySelectorAll('#map-rows select');
+  const colToField = {};
+  mapSelects.forEach(sel => { colToField[pendingCsvRows.cols[sel.dataset.col]] = sel.value; });
+
+  const now = fmtDate(new Date());
+  const rows = pendingCsvRows.data.map((rawRow, i) => {
+    const obj = {};
+    Object.entries(colToField).forEach(([col, field]) => {
+      if (field === '— ignora —') return;
+      obj[field] = (rawRow[col] || '').toString().trim();
+    });
+    if (obj['Piattaforma']) obj['Piattaforma'] = fuzzyMatchOption(obj['Piattaforma'], PIATTAFORME);
+    if (obj['Stato Contratto']) obj['Stato Contratto'] = fuzzyMatchOption(obj['Stato Contratto'], STATI);
+    if (obj['Company']) obj['Company'] = fuzzyMatchOption(obj['Company'], COMPANIES);
+    const id = (Date.now() + i).toString();
+    return CONTRATTI_HEADERS.map(h => h === 'ID' ? id : h === 'Data Creazione' ? now : h === 'Ultima Modifica' ? now : obj[h] || '');
+  }).filter(r => r[1]); // scarta righe senza Nome Azienda
+
+  if (!rows.length) { toast('❌ Nessuna riga valida (manca Nome Azienda)'); return; }
+  closeM('map-ov'); load();
+  try {
+    await appendContratti(spreadsheetId, rows);
+    await fetchContratti(); hideLoad(); render();
+    toggleCsvZone();
+    toast(`✅ ${rows.length} contratti importati`);
+  } catch (e) { hideLoad(); toast('❌ ' + e.message); }
+  pendingCsvRows = null;
+}
+
+// ═══════════════════════════════════════════════════
+// HELPERS UI
+// ═══════════════════════════════════════════════════
+function openM(id) { document.getElementById(id).classList.add('show'); }
+function closeM(id) { document.getElementById(id).classList.remove('show'); }
+function ovc(e, id) { if (e.target.id === id) closeM(id); }
+function load() { document.getElementById('loader').style.display = 'flex'; }
+function hideLoad() { document.getElementById('loader').style.display = 'none'; }
+let _tt;
+function toast(msg, ms = 3500) { clearTimeout(_tt); const el = document.getElementById('toast'); el.textContent = msg; el.classList.add('show'); _tt = setTimeout(() => el.classList.remove('show'), ms); }
+hideLoad();
+</script>
+<script src="https://accounts.google.com/gsi/client" async></script>
+</body>
+</html>
